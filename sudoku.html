@@ -14,14 +14,16 @@
         answers. If a mistake is made upon entry simply click the cell and press delete.
     </p>
    
-    <div id="board" class="board">
-    </div>
+    <div id="board" class="board"></div>
+
+    <button style="background-color: blue; border-radius: 5px; height: 30px;" onclick="game.resetAll();">Reset Puzzle</button>
 
     <script src="js/sudoku.js"></script>
     <script>
+        var game;
         window.addEventListener('DOMContentLoaded', (event) => {
             let board = document.getElementById('board');
-            let game = new Sudoku.Game.Grid(board,3);
+            game = new Sudoku.Game.Grid(board,3);
             // The following is to test
             // game.setCell(0,2,8);
             // game.setCell(1,3,9);

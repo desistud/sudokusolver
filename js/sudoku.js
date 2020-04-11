@@ -337,10 +337,17 @@ Sudoku.Game = {
                     cell.reset();
             });
             this.refresh();
-        }
+        };
+
+        let resetAll = function(){
+            this.cells.forEach( cell => {
+                    cell.reset();
+            });
+        };
 
         grid.prototype = {
             reset : reset,
+            resetAll : resetAll,
             setCell : setCell,
             getRowCells : getRowCells,
             getColCells : getColCells,

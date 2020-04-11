@@ -10,3 +10,5 @@ The main javascript objects being defimed include:
 * CellValue
 
 Unfortunately there was not need for object inheritence, so this example does not demonstrate that ability.
+
+A working example of this project can be viewed at http://www.bhavsar.net/sudoku.html
