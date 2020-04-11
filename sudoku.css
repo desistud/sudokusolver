@@ -1,0 +1,65 @@
+.board {
+    display: grid;
+    width: 300px;
+    font-family: 'Courier New', Courier, monospace;
+    grid-template-columns: repeat(9, 1fr);
+    background-color: black;
+    gap: 2px;
+    border: 6px solid black;
+}
+
+.cell{
+    background-color: white;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+}
+
+.cell.cellborderright{
+    margin-right: 2px;
+}
+
+.cell.cellborderleft{
+    margin-left: 2px;
+}
+
+.cell.cellbordertop{
+    margin-top: 2px;
+}
+
+.cell.cellborderbottom{
+    margin-bottom: 2px;
+}
+
+.cellvalue{
+    background-color: yellow;
+    text-align: center;
+    color: blue;
+}
+
+.cellvalue.cellfound.cellentered{
+    background-color: white;
+    color: black;
+    grid-column-start: 1;
+    grid-column-end: 4;
+    grid-row-start: 1;
+    grid-row-end: 4;
+    font-size: 300%;
+}
+
+.cellvalue.cellfound{
+    background-color: lightblue;
+    grid-column-start: 1;
+    grid-column-end: 4;
+    grid-row-start: 1;
+    grid-row-end: 4;
+    font-size: 300%;
+ }
+
+ .cellinput{
+    grid-column-start: 1;
+    grid-column-end: 4;
+    grid-row-start: 1;
+    grid-row-end: 4;
+    font-size: 250%;
+ }
