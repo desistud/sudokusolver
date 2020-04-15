@@ -116,6 +116,10 @@ Sudoku.Game = {
                     cellValue.cellValueDiv.textContent = '';
                 }
             });
+            if( changed )
+                this.grid.gridCheck();
+            if( changed && this.getValidValues().length === 0)
+                console.log("ERROR");
             return changed;
         };
 
@@ -129,6 +133,10 @@ Sudoku.Game = {
                     cellValue.cellValueDiv.textContent = '';
                 }
             });
+            if( changed )
+                this.grid.gridCheck();
+            if( changed && this.getValidValues().length === 0)
+                console.log("ERROR");
             return changed;
         };
 
@@ -165,60 +173,58 @@ Sudoku.Game = {
                 for( let size=1; size<=3; size++) {
                     this.cells.forEach( cell => {
                         let validValues = cell.getValidValues();
-                        //if( validValues.length > 1 )
-                        {
-                            let combinations = this.getCombinations( validValues, size);
-                            combinations.forEach( combination => {
-                                changed = this.checkCombinations(combination, this.getRowCells(cell.row)) || changed;
-                                changed = this.checkCombinations(combination, this.getColCells(cell.col)) || changed;
-                                changed = this.checkCombinations(combination, this.getSectionCells(cell.section)) || changed;
-                            });
-                        }
+                        let combinations = this.getCombinations( validValues, size);
+                        combinations.forEach( combination => {
+                            changed = this.checkCombinations(combination, this.getRowCells(cell.row), false) || changed;
+                            changed = this.checkCombinations(combination, this.getColCells(cell.col), false) || changed;
+                            changed = this.checkCombinations(combination, this.getSectionCells(cell.section), true) || changed;
+                            changed = this.checkABCCombination(cell,validValues,combination) || changed;
+                        });
                     });
-                }
-                for( let section=1; section<=this.gridSize; section++){
-                    changed = this.checkSection(this.getSectionCells(section), this.cells) || changed;
                 }
             } while(changed);
             this.cells.forEach( cell => cell.getValidValues() );
         };
 
-        ////
-        // This method performs a check by checking if a value can only exits
-        // within row/col in a section. If so then that value cannot exist on
-        // that same row/col in the other secions
         ///
-        let checkSection = function(section, cells){
-            let changed = false;
-            for( let value=1; value<=9; value++){
-                let containingCells = [];
-                let containingCols = [];
-                let containingRows = [];
-                section.forEach( sectionCell => {
-                    if(sectionCell.getValidValues().includes(value)){
-                        containingCells.push(sectionCell);
-                        if(!containingRows.includes(sectionCell.row))
-                            containingRows.push(sectionCell.row);
-                        if(!containingCols.includes(sectionCell.col))
-                            containingCols.push(sectionCell.col);
-                    }
-                });
-                if(containingCells.length > 1){
-                    if(containingRows.length === 1){
-                        cells.forEach( cell => {
-                            if( cell.row === containingRows[0] && cell.section !== containingCells[0].section)
-                                changed = cell.setInvalidValues([value]) || changed;
-                        });
-                    }
-                    else if( containingCols.length === 1){
-                        cells.forEach( cell => {
-                            if( cell.col === containingCols[0] && cell.section !== containingCells[0].section)
-                                changed = cell.setInvalidValues([value]) || changed;
-                        });
+        // this method basically checks a grid pattern of 4 cells, where the cells form the points of
+        // a rectangle and 3 of the cells contain the a combination of values ABC with AB, BC, AC which
+        // means the remaining cell cannot have the value A
+        ///
+        let checkABCCombination = function( cell, validValues, combination ){
+            if( combination.length === 2 && validValues.length === 2){
+                let pairs = [[validValues[0], validValues[1]],[validValues[1],validValues[0]]];
+                for( let i=0; i<pairs.length; i++){
+                    for( let row=0; row<this.gridSize; row++ ){
+                        if( row !== cell.row){
+                            let rowCell = this.cells[row*this.gridSize+cell.col];
+                            let rowCellValues = rowCell.getValidValues();
+                            if( rowCellValues.length === 2 && rowCellValues.includes(pairs[i][0])){
+                                for( let col=0; col<this.gridSize; col++ ){
+                                    if( col !== cell.col){
+                                        let colCell = this.cells[cell.row*this.gridSize+col];
+                                        let colCellValues = colCell.getValidValues();
+                                        if( colCellValues.length === 2 && colCellValues.includes(pairs[i][1])){
+                                            let rowCellValue = 0;
+                                            for( let x=0; x<2 && rowCellValue === 0; x++)
+                                                if(rowCellValues[x] !== pairs[i][0])
+                                                    rowCellValue = rowCellValues[x];
+                                            let colCellValue = 0;
+                                            for( let x=0; x<2 && colCellValue === 0; x++)
+                                                if(colCellValues[x] !== pairs[i][1])
+                                                    colCellValue = colCellValues[x];
+                                            if(rowCellValue === colCellValue){
+                                                return this.cells[rowCell.row*this.gridSize+colCell.col].setInvalidValues([rowCellValue]);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
-            return changed;
+            return false;
         };
 
         ///
@@ -228,7 +234,7 @@ Sudoku.Game = {
         // those values. This method basically attempts to reduce the possible
         // values on the cells based on the combination passed in
         ///
-        let checkCombinations = function( combination, cells )
+        let checkCombinations = function( combination, cells, isSectionBased )
         {
             let matchingCells = [];
             let containingCells = [];
@@ -267,6 +273,35 @@ Sudoku.Game = {
                     else
                         changed = cell.setInvalidValues(combination) || changed;
                 });
+            }
+            else if(!isSectionBased && containingSomeCells.length === 0){
+                let containingSections = [];
+                let containingRows = [];
+                let containingCols = [];
+                containingCells.forEach( cell => {
+                    if(!containingSections.includes(cell.section))
+                        containingSections.push(cell.section);
+                    if(!containingRows.includes(cell.row))
+                        containingRows.push(cell.row);
+                    if(!containingCols.includes(cell.col))
+                        containingCols.push(cell.col);
+                });
+                if( containingSections.length === 1){
+                    if( containingRows.length === 1){
+                        this.cells.forEach( cell => {
+                            if( (cell.row === containingRows[0] && cell.section != containingSections[0]) ||
+                                (cell.row !== containingRows[0] && cell.section === containingSections[0]))
+                                    changed = cell.setInvalidValues(combination) || changed;
+                        });
+                    }
+                    else if( containingCols.length == 1){
+                        this.cells.forEach( cell => {
+                            if( (cell.col === containingCols[0] && cell.section != containingSections[0]) ||
+                                (cell.col !== containingCols[0] && cell.section === containingSections[0]))
+                                    changed = cell.setInvalidValues(combination) || changed;
+                        });
+                    }
+                }
             }
             return changed;
         }
@@ -318,12 +353,13 @@ Sudoku.Game = {
         };
 
         let setCell = function(row,col,value){
-            this.cells.forEach( cell => {
-                if( cell.row === row && cell.col === col ) {
-                    cell.setValue(value);
-                    return;
-                }
-            });
+            this.cells[row*this.gridSize+col].setValue(value);
+            // this.cells.forEach( cell => {
+            //     if( cell.row === row && cell.col === col ) {
+            //         cell.setValue(value);
+            //         return;
+            //     }
+            // });
         }
 
         let reset = function(){
@@ -345,7 +381,37 @@ Sudoku.Game = {
             });
         };
 
+        let gridCheck = function(){
+            let errors = false;
+            for( let row=0; row<this.gridSize; row++ )
+                errors = cellsCheck(this.getRowCells(row)) || errors;
+            for( let col=0; col<this.gridSize; col++ )
+                errors = cellsCheck(this.getColCells(col)) || errors;
+            for( let sect=0; sect<this.gridSize; sect++ )
+                errors = cellsCheck(this.getSectionCells(sect)) || errors;
+            return errors;
+        }
+
+        let cellsCheck = function(cells){
+            let errors = false;
+            let values = [];
+            cells.forEach( cell => {
+                let cellValues = cell.getValidValues();
+                if( cellValues.length === 1 )
+                    if( values.includes(cellValues[0]) ){
+                        errors = true;
+                        console.log('Error on cell at: ' + cell.row + ',' + cell.col);
+                    }
+                    else{
+                        values.push(cellValues[0]);
+                    }
+            });
+            return errors;
+        }
+
         grid.prototype = {
+            gridCheck : gridCheck,
+            cellsCheck : cellsCheck,
             reset : reset,
             resetAll : resetAll,
             setCell : setCell,
@@ -353,7 +419,7 @@ Sudoku.Game = {
             getColCells : getColCells,
             getSectionCells : getSectionCells,
             refresh : refresh,
-            checkSection : checkSection,
+            checkABCCombination : checkABCCombination,
             checkCombinations : checkCombinations,
             combinationUtil : combinationUtil,
             getCombinations : getCombinations,

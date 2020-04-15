@@ -1,6 +1,8 @@
 .board {
     display: grid;
-    width: 300px;
+    
+    width: 100vw;
+    max-width: 500px;
     font-family: 'Courier New', Courier, monospace;
     grid-template-columns: repeat(9, 1fr);
     background-color: black;
