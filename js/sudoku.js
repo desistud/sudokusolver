@@ -42,31 +42,54 @@ Sudoku.Game = {
           if (thisCell.cellDiv.childElementCount > 1) {
             let input = document.createElement('input');
             input.className = 'cellinput';
-            input.addEventListener('input', (event) => {
-              let keycode = event.which;
+            input.addEventListener('beforeinput', (event) => {
               if (
-                !(
-                  event.shiftKey == false &&
-                  (keycode == 46 || (keycode >= 49 && keycode <= 57))
-                )
+                event.data === null ||
+                event.data === ' ' ||
+                isNaN(event.data)
               ) {
-                event.preventDefault();
-              } else {
-                thisCell.cellDiv.textContent = '';
-                thisCell.cellValues.forEach((cellValue) =>
-                  thisCell.cellDiv.appendChild(cellValue.cellValueDiv)
-                );
-                if (keycode === 46) {
+                if (event.data === null || event.data === ' ') {
+                  input.blur();
                   thisCell.reset();
                   thisCell.grid.reset();
                 } else {
-                  let value = event.keyCode - 48;
-                  if (thisCell.getValidValues().includes(value)) {
-                    thisCell.setValue(value);
-                    thisCell.grid.refresh();
-                  }
+                  event.preventDefault();
+                }
+              } else {
+                const value = parseInt(event.data, 10);
+                if (thisCell.getValidValues().includes(value)) {
+                  input.blur();
+                  thisCell.setValue(value);
+                  thisCell.grid.refresh();
+                } else {
+                  event.preventDefault();
                 }
               }
+
+              //   let keycode = event.which;
+              //   if (
+              //     !(
+              //       event.shiftKey == false &&
+              //       (keycode == 46 || (keycode >= 49 && keycode <= 57))
+              //     )
+              //   ) {
+              //     event.preventDefault();
+              //   } else {
+              //     thisCell.cellDiv.textContent = '';
+              //     thisCell.cellValues.forEach((cellValue) =>
+              //       thisCell.cellDiv.appendChild(cellValue.cellValueDiv)
+              //     );
+              //     if (keycode === 46) {
+              //       thisCell.reset();
+              //       thisCell.grid.reset();
+              //     } else {
+              //       let value = event.keyCode - 48;
+              //       if (thisCell.getValidValues().includes(value)) {
+              //         thisCell.setValue(value);
+              //         thisCell.grid.refresh();
+              //       }
+              //     }
+              //   }
             });
             input.addEventListener('focusout', (event) => {
               thisCell.cellDiv.textContent = '';
